@@ -13,8 +13,8 @@ easypost.api_key = API_KEY
 READY_TO_BUY = False
 
 
-# Expected order of fields
-
+def email_tracking_number(customer_email, tracking_code):
+    print(f"Emailing {tracking_code} to {customer_email}")
 
 
 def initialize_params():
@@ -147,10 +147,11 @@ if __name__ == '__main__':
                 shipment.buy(rate=chosen_rate)
                 print(f"URL: {shipment.postage_label.label_url}")
                 print(f"Tracking code: {shipment.tracking_code}")
+                print(f"Emailing tracking number {to_address_dict['customerEmail']}...")
+                email_tracking_number(to_address_dict['customerEmail'], shipment.tracking_code)
                 line.append(shipment.postage_label.label_url)
                 line.append(shipment.tracking_code)
                 csvwriter.writerow(line)
             except Exception as e:
                 print(f"[!] Not able to complete purchase of label - {e}")
                 continue
-        ##TODO: email customer with tracking number
