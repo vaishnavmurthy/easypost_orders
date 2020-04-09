@@ -4,9 +4,12 @@ import sys
 import json
 from datetime import date
 import math
+from email_customer.email_customer import EmailCustomer
 
 # FILL WITH TEST/PROD API KEY
-API_KEY = ""
+with open("env_variables.json", 'r+') as file:
+    env_variables = json.loads(file.read())
+API_KEY = env_variables["APIKey"]
 easypost.api_key = API_KEY
 
 # Change to true when ready to buy labels
@@ -15,6 +18,8 @@ READY_TO_BUY = False
 
 def email_tracking_number(customer_email, tracking_code):
     print(f"Emailing {tracking_code} to {customer_email}")
+    email = EmailCustomer(customer_email, tracking_code)
+    email.send_mail()
 
 
 def initialize_params():
