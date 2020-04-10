@@ -15,7 +15,7 @@ class EmailCustomer:
                        f"Your tracking number is {self.tracking_number}\n" \
                        f"Best,\n" \
                        f"Chikfu Team"
-        with open("email_template.html", "r") as file:
+        with open("email_customer/email_template.html", "r") as file:
             html_message = file.read()
         template = Template(html_message)
         self.html_message = template.substitute(tracking_number=self.tracking_number)
@@ -24,7 +24,7 @@ class EmailCustomer:
         # initialize server
         context = ssl.create_default_context()
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context)
-        with open("../env_variables.json", "r") as file:
+        with open("env_variables.json", "r") as file:
             env_variables = json.loads(file.read())
         # pulling username and password from config file
         username = env_variables["EmailUsername"]
