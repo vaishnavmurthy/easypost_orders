@@ -15,6 +15,78 @@ easypost.api_key = API_KEY
 # Change to true when ready to buy labels
 READY_TO_BUY = False
 
+# Change to true when ready to use SquareSpace API
+SQUARESPACE = False
+
+
+def calc_parcel_dict(order_quantity):
+    num_parcels = int(math.ceil(order_quantity / 12))
+    dimensions = str(num_parcels * 10)
+    # play around with numbers for accuracy
+    parcel_weight = num_parcels * 3.5
+    chikfu_weight = order_quantity * 2 / 3
+    ice_pack_weight = order_quantity / 2
+    weight = str(int(math.ceil(parcel_weight + chikfu_weight + ice_pack_weight)))
+    parcel_dict = {
+        "length": dimensions,
+        "width": dimensions,
+        "height": dimensions,
+        "weight": weight
+    }
+    return parcel_dict
+
+
+def initialize_to_address_csv():
+    to_address_list = []
+    with open(sys.argv[1], 'r') as file:
+        csvreader = csv.reader(file)
+        for line in csvreader:
+            fulfillment = line[4]
+            if fulfillment.upper() == "PENDING":
+                temp_dict = {}
+                billing_name = line[24]
+                first_name = billing_name.split(" ")[0]
+                last_name = billing_name.split(" ")[-1]
+                address1 = line[33].strip()
+                address2 = line[34].strip()
+                city = line[35]
+                postalCode = line[36]
+                state = line[37]
+                customerEmail = line[1]
+                phone = line[39]
+                temp_dict["firstName"] = first_name
+                temp_dict["lastName"] = last_name
+                temp_dict["address1"] = address1
+                temp_dict["address2"] = address2
+                temp_dict["city"] = city
+                temp_dict["postalCode"] = postalCode
+                temp_dict["state"] = state
+                temp_dict["customerEmail"] = customerEmail
+                temp_dict["phone"] = phone
+                order_quantity = int(line[16])
+                temp_dict["parcel"] = calc_parcel_dict(order_quantity)
+                to_address_list.append(temp_dict)
+    print(to_address_list)
+    return to_address_list
+
+
+def initialize_to_address_squarespace():
+    to_address_list = []
+    with open(sys.argv[1], 'r') as file:
+        data = file.read()
+    order_list = json.loads(data)
+    for order in order_list:
+        order_dict = order
+        if order_dict["fulfillmentStatus"] == "PENDING":
+            temp_dict = order_dict["shippingAddress"]
+            temp_dict["customerEmail"] = order_dict["customerEmail"]
+            # calculate parcel dimensions based on quantity - up to 12 10x10x10, weight 2lb for 3 chikfu
+            # + ice pack .5 lb + 3.5 lb per parcel
+            order_quantity = order_dict["lineItems"][0]["quantity"]
+            temp_dict["parcel"] = calc_parcel_dict(order_quantity)
+            to_address_list.append(temp_dict)
+    return to_address_list
+
 
 def email_tracking_number(customer_email, tracking_code):
     print(f"Emailing {tracking_code} to {customer_email}")
@@ -37,34 +109,10 @@ def initialize_params():
         "email": "contact@chikfu.co",
         "residential": None
     }
-    to_address_list = []
-    parcel_list = []
-    with open(sys.argv[1], 'r') as file:
-        data = file.read()
-    order_list = json.loads(data)
-    for order in order_list:
-        order_dict = order
-        if order_dict["fulfillmentStatus"] == "PENDING":
-            temp_dict = order_dict["shippingAddress"]
-            temp_dict["customerEmail"] = order_dict["customerEmail"]
-            # calculate parcel dimensions based on quantity - up to 12 10x10x10, weight 2lb for 3 chikfu
-            # + ice pack .5 lb + 3.5 lb per parcel
-            order_quantity = order_dict["lineItems"][0]["quantity"]
-            num_parcels = int(math.ceil(order_quantity/12))
-            dimensions = str(num_parcels * 10)
-            # play around with numbers for accuracy
-            parcel_weight = num_parcels * 3.5
-            chikfu_weight = order_quantity * 2/3
-            ice_pack_weight = order_quantity / 2
-            weight = str(int(math.ceil(parcel_weight + chikfu_weight + ice_pack_weight)))
-            parcel_dict = {
-                "length": dimensions,
-                "width": dimensions,
-                "height": dimensions,
-                "weight": weight
-            }
-            temp_dict["parcel"] = parcel_dict
-            to_address_list.append(temp_dict)
+    if SQUARESPACE:
+        to_address_list = initialize_to_address_squarespace()
+    else:
+        to_address_list = initialize_to_address_csv()
     return header_row, from_address_dict, to_address_list
 
 

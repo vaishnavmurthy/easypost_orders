@@ -19,3 +19,6 @@ Structure of the file is the following:
 ## Usage
 `python query.py PATH_TO_SQUARESPACE_JSON`
 
+OR
+
+`python query.py PATH_TO_ORDER_CSV_FILE`
