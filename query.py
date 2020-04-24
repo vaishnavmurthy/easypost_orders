@@ -66,7 +66,6 @@ def initialize_to_address_csv():
                 order_quantity = int(line[16])
                 temp_dict["parcel"] = calc_parcel_dict(order_quantity)
                 to_address_list.append(temp_dict)
-    print(to_address_list)
     return to_address_list
 
 
@@ -89,7 +88,7 @@ def initialize_to_address_squarespace():
 
 
 def email_tracking_number(customer_email, tracking_code):
-    print(f"Emailing {tracking_code} to {customer_email}")
+    print(f"[+] Emailing {tracking_code} to {customer_email}")
     email = EmailCustomer(customer_email, tracking_code)
     email.send_mail()
 
@@ -100,31 +99,33 @@ def initialize_params():
     from_address_dict = {
         "name": "Chikfu",
         "company": "Chikfu",
-        "street1": "12639 Coit Road",
+        "street1": "12639 Coit Rd",
         "street2": "#2216",
         "city": "Dallas",
         "state": "TX",
         "zip": "75251",
         "phone": "9154719427",
         "email": "contact@chikfu.co",
-        "residential": None
+        "residential": False
     }
     if SQUARESPACE:
+        print("[+] Reading shipping addresses from SquareSpace API JSON")
         to_address_list = initialize_to_address_squarespace()
     else:
+        print("[+] Reading shipping addresses from SquareSpace order CSV file")
         to_address_list = initialize_to_address_csv()
     return header_row, from_address_dict, to_address_list
 
 
 if __name__ == '__main__':
+    LSO_count = 0
+    non_LSO_count = 0
     output_csv_file = f'{date.today()}-chikfu_orders.csv'
+    print("[+] Initializing parameters")
     param_list = initialize_params()
     header_row = param_list[0]
     from_address_dict = param_list[1]
     to_address_list = param_list[2]
-    output_file = open(output_csv_file, 'w+')
-    csvwriter = csv.writer(output_file)
-    csvwriter.writerow(header_row)
     for to_address_dict in to_address_list:
         # Adding customer / parcel details to csv row
         line = [
@@ -165,8 +166,9 @@ if __name__ == '__main__':
             zip=to_address_dict["postalCode"],
             phone=to_address_dict["phone"],
             email=to_address_dict["customerEmail"],
-            residential=None
+            residential=False
         )
+
         # initializing parcel
         parcel = easypost.Parcel.create(
             length=to_address_dict["parcel"]["length"],
@@ -174,33 +176,43 @@ if __name__ == '__main__':
             height=to_address_dict["parcel"]["height"],
             weight=to_address_dict["parcel"]["weight"]
         )
-
-        # creating shipment
+        # creating shipment filtering on LSO carrier account
         shipment = easypost.Shipment.create(
             to_address=toAddress,
             from_address=fromAddress,
-            parcel=parcel
+            parcel=parcel,
+            carrier_accounts=["ca_fd3f3bb2d9db4e40a8555f5aba3d0c6f"]
         )
         LSO_flag = 0
         chosen_rate = {}
-        print(shipment)
+        simple_ground_rate = {}
         # ensuring LSO rates are available
         for rate in shipment.rates:
             if rate["carrier"] == 'LSO' and rate["service"] == "ECommerce":
                 chosen_rate = rate
                 LSO_flag = 1
                 break
+            elif rate["carrier"] == "LSO" and rate["service"] == "SimpleGroundBasic":
+                LSO_flag = 1
+                simple_ground_rate = rate
+
         if not LSO_flag:
-            print("[!] Unable to pull LSO rates")
+            print("[!] Unable to pull LSO ECommerce or GroundBasic rate")
             continue
+        elif chosen_rate == {}:
+            chosen_rate = simple_ground_rate
         # Only completes purchase when ready
+        print(f"[+] Chosen rate for purchase for {toAddress.name}: {chosen_rate['carrier']} {chosen_rate['service']}")
         if READY_TO_BUY:
             try:
-                print(f"Buying shipment:")
+                output_file = open(output_csv_file, 'w+')
+                csvwriter = csv.writer(output_file)
+                csvwriter.writerow(header_row)
+                print(f"[+] Buying shipment:")
                 shipment.buy(rate=chosen_rate)
-                print(f"URL: {shipment.postage_label.label_url}")
-                print(f"Tracking code: {shipment.tracking_code}")
-                print(f"Emailing tracking number {to_address_dict['customerEmail']}...")
+                print(f"[+] URL: {shipment.postage_label.label_url}")
+                print(f"[+] Tracking code: {shipment.tracking_code}")
+                print(f"[+] Emailing tracking number {to_address_dict['customerEmail']}...")
                 email_tracking_number(to_address_dict['customerEmail'], shipment.tracking_code)
                 line.append(shipment.postage_label.label_url)
                 line.append(shipment.tracking_code)
