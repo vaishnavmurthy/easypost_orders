@@ -21,4 +21,8 @@ jobs:
     steps:
     - name: python-lint
       uses: CyberZHG/github-action-python-lint@0.0.2
+    - name: Check HTML
+      uses: chabad360/htmlproofer@master
+      with:
+        directory: "./email_customer"
 
