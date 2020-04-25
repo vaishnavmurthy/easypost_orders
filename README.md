@@ -1,7 +1,7 @@
 # easypost_orders
 Python script to generate shipping labels and tracking information using the EasyPost API  
 
-##Features:
+## Features:
 * Generates shipping labels and tracking numbers for a given carrier
 * Emails customer the tracking number once generated
 
