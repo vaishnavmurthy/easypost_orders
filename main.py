@@ -1,12 +1,10 @@
 import easypost
 import csv
-import sys
 import json
 from datetime import date
-import math
 from email_customer.email_customer import EmailCustomer
+from initialize.initialize import Initialize
 
-# FILL WITH TEST/PROD API KEY
 with open("env_variables.json", 'r+') as file:
     env_variables = json.loads(file.read())
 API_KEY = env_variables["APIKey"]
@@ -19,113 +17,19 @@ READY_TO_BUY = False
 SQUARESPACE = False
 
 
-def calc_parcel_dict(order_quantity):
-    num_parcels = int(math.ceil(order_quantity / 12))
-    dimensions = str(num_parcels * 10)
-    # play around with numbers for accuracy
-    parcel_weight = num_parcels * 3.5
-    chikfu_weight = order_quantity * 2 / 3
-    ice_pack_weight = order_quantity / 2
-    weight = str(int(math.ceil(parcel_weight + chikfu_weight + ice_pack_weight)))
-    parcel_dict = {
-        "length": dimensions,
-        "width": dimensions,
-        "height": dimensions,
-        "weight": weight
-    }
-    return parcel_dict
-
-
-def initialize_to_address_csv():
-    to_address_list = []
-    with open(sys.argv[1], 'r') as file:
-        csvreader = csv.reader(file)
-        for line in csvreader:
-            fulfillment = line[4]
-            if fulfillment.upper() == "PENDING":
-                temp_dict = {}
-                billing_name = line[24]
-                first_name = billing_name.split(" ")[0]
-                last_name = billing_name.split(" ")[-1]
-                address1 = line[33].strip()
-                address2 = line[34].strip()
-                city = line[35]
-                postalCode = line[36]
-                state = line[37]
-                customerEmail = line[1]
-                phone = line[39]
-                temp_dict["firstName"] = first_name
-                temp_dict["lastName"] = last_name
-                temp_dict["address1"] = address1
-                temp_dict["address2"] = address2
-                temp_dict["city"] = city
-                temp_dict["postalCode"] = postalCode
-                temp_dict["state"] = state
-                temp_dict["customerEmail"] = customerEmail
-                temp_dict["phone"] = phone
-                order_quantity = int(line[16])
-                temp_dict["parcel"] = calc_parcel_dict(order_quantity)
-                to_address_list.append(temp_dict)
-    return to_address_list
-
-
-def initialize_to_address_squarespace():
-    to_address_list = []
-    with open(sys.argv[1], 'r') as file:
-        data = file.read()
-    order_list = json.loads(data)
-    for order in order_list:
-        order_dict = order
-        if order_dict["fulfillmentStatus"] == "PENDING":
-            temp_dict = order_dict["shippingAddress"]
-            temp_dict["customerEmail"] = order_dict["customerEmail"]
-            # calculate parcel dimensions based on quantity - up to 12 10x10x10, weight 2lb for 3 chikfu
-            # + ice pack .5 lb + 3.5 lb per parcel
-            order_quantity = order_dict["lineItems"][0]["quantity"]
-            temp_dict["parcel"] = calc_parcel_dict(order_quantity)
-            to_address_list.append(temp_dict)
-    return to_address_list
-
-
 def email_tracking_number(customer_email, tracking_code):
     print(f"[+] Emailing {tracking_code} to {customer_email}")
     email = EmailCustomer(customer_email, tracking_code)
     email.send_mail()
 
 
-def initialize_params():
-    header_row = ["cust_name", "cust_street", "cust_street2", "cust_city", "cust_state", "cust_zip", "cust_phone",
-                  "to_residential", "length", "width", "height", "weight", "shipping_label_url", "tracking_number"]
-    from_address_dict = {
-        "name": "Chikfu",
-        "company": "Chikfu",
-        "street1": "12639 Coit Rd",
-        "street2": "#2216",
-        "city": "Dallas",
-        "state": "TX",
-        "zip": "75251",
-        "phone": "9154719427",
-        "email": "contact@chikfu.co",
-        "residential": False
-    }
-    if SQUARESPACE:
-        print("[+] Reading shipping addresses from SquareSpace API JSON")
-        to_address_list = initialize_to_address_squarespace()
-    else:
-        print("[+] Reading shipping addresses from SquareSpace order CSV file")
-        to_address_list = initialize_to_address_csv()
-    return header_row, from_address_dict, to_address_list
-
-
 if __name__ == '__main__':
-    LSO_count = 0
-    non_LSO_count = 0
     output_csv_file = f'{date.today()}-chikfu_orders.csv'
     print("[+] Initializing parameters")
-    param_list = initialize_params()
-    header_row = param_list[0]
-    from_address_dict = param_list[1]
-    to_address_list = param_list[2]
+    parameters = Initialize(SQUARESPACE)
+    header_row = parameters.header_row
+    from_address_dict = parameters.from_address_dict
+    to_address_list = parameters.to_address_list
     for to_address_dict in to_address_list:
         # Adding customer / parcel details to csv row
         line = [
@@ -197,7 +101,9 @@ if __name__ == '__main__':
                 simple_ground_rate = rate
 
         if not LSO_flag:
-            print("[!] Unable to pull LSO ECommerce or GroundBasic rate")
+            print(f"[!] Unable to pull LSO ECommerce or GroundBasic rate for {toAddress.name}")
+            for rate in shipment.rates:
+                print(rate)
             continue
         elif chosen_rate == {}:
             chosen_rate = simple_ground_rate
