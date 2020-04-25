@@ -3,6 +3,7 @@ import math
 import csv
 import os
 
+
 # TODO: return more than one parcel if > 1 num_parcels
 def calc_parcel_dict(order_quantity):
     num_parcels = int(math.ceil(order_quantity / 12))
