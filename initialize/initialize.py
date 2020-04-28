@@ -4,7 +4,6 @@ import csv
 import os
 
 
-# TODO: return more than one parcel if > 1 num_parcels
 def calc_parcel_dict(order_quantity):
     num_parcels = int(math.ceil(order_quantity / 12))
     dimensions = "10"
@@ -14,14 +13,17 @@ def calc_parcel_dict(order_quantity):
     parcel_weight = num_parcels * 2
     chikfu_weight = order_quantity * 9 / 16
     ice_pack_weight = order_quantity / 4
-    weight = str(int(math.ceil(parcel_weight + chikfu_weight + ice_pack_weight)))
+    weight = str(int(math.ceil((parcel_weight + chikfu_weight + ice_pack_weight) / num_parcels)))
     parcel_dict = {
         "length": dimensions,
         "width": dimensions,
         "height": dimensions,
         "weight": weight
     }
-    return parcel_dict
+    parcel_list = []
+    for i in range(num_parcels):
+        parcel_list.append(parcel_dict)
+    return parcel_list
 
 
 class Initialize:
@@ -73,18 +75,20 @@ class Initialize:
                             state = line[37]
                             customer_email = line[1]
                             phone = line[39]
-                            temp_dict["firstName"] = first_name
-                            temp_dict["lastName"] = last_name
-                            temp_dict["address1"] = address1
-                            temp_dict["address2"] = address2
-                            temp_dict["city"] = city
-                            temp_dict["postalCode"] = postal_code
-                            temp_dict["state"] = state
-                            temp_dict["customerEmail"] = customer_email
-                            temp_dict["phone"] = phone
                             order_quantity = int(line[16])
-                            temp_dict["parcel"] = calc_parcel_dict(order_quantity)
-                            self.to_address_list.append(temp_dict)
+                            parcel_list = calc_parcel_dict(order_quantity)
+                            for parcel_dict in parcel_list:
+                                temp_dict["firstName"] = first_name
+                                temp_dict["lastName"] = last_name
+                                temp_dict["address1"] = address1
+                                temp_dict["address2"] = address2
+                                temp_dict["city"] = city
+                                temp_dict["postalCode"] = postal_code
+                                temp_dict["state"] = state
+                                temp_dict["customerEmail"] = customer_email
+                                temp_dict["phone"] = phone
+                                temp_dict["parcel"] = parcel_dict
+                                self.to_address_list.append(temp_dict)
                 new_filename = "done-"+file_name
                 os.rename(os.path.join(directory, file_name), os.path.join(directory, new_filename))
 
