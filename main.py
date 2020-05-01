@@ -109,6 +109,7 @@ if __name__ == '__main__':
                 simple_ground_rate = rate
         if not LSO_flag:
             print(f"[!] Unable to pull LSO ECommerce or GroundBasic rate for {toAddress.name}")
+            print(f"[!] Available rates:")
             for rate in shipment.rates:
                 print(rate)
             continue
