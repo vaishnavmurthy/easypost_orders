@@ -126,7 +126,6 @@ if __name__ == '__main__':
                 urllib.request.urlretrieve(shipment.postage_label.label_url,
                                            f"Labels{os.sep}{date.today()}-{toAddress.name.replace(' ', '_')}-label.jpg")
                 print(f"[+] Tracking code: {shipment.tracking_code}")
-                print(f"[+] Emailing tracking number {to_address_dict['customerEmail']}...")
                 email_tracking_number(to_address_dict['customerEmail'], shipment.tracking_code)
                 line.append(shipment.postage_label.label_url)
                 line.append(shipment.tracking_code)
