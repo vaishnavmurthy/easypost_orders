@@ -20,6 +20,12 @@ Structure of the file is the following:
 }
 ```
 
+## Flags  
+#### READY_TO_BUY:  
+Update value of this variable in `main.py` to `True` once ready to purchase labels and email the tracking number to the customer.  
+#### SQUARESPACE:  
+Update value of this variable in `main.py` to `True` if you are using the json output from the SquareSpace API instead of the default Order csv.  
+
 ## CSV / JSON file
 * The script takes in either the default output order csv from SquareSpace, or the order json object 
 from the SquareSpace API as input.
