@@ -16,6 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: ricardochaves/python-lint@v1.1.0
-          with:
-            extra-pycodestyle-options: "--ignore=E501"
-            extra-flake8-options: "--ignore=E501"
+        with:
+          extra-pycodestyle-options: "--ignore=E501"
+          extra-flake8-options: "--ignore=E501"
