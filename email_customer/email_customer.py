@@ -7,20 +7,24 @@ from string import Template
 
 
 class EmailCustomer:
-    def __init__(self, customer_email, tracking_number):
+    def __init__(self, customer_email, tracking_number, customer_name):
         self.tracking_number = tracking_number
         self.customer_email = customer_email
+        self.customer_name = customer_name
         self.text_message = (
-            f"\nHello valued customer,\n"
+            f"\nHi {customer_name},\n"
             f"Thank you for your Chikfu order! It will be shipped shortly.\n"
-            f"Your tracking number is {self.tracking_number}\n"
+            f"Your tracking number is {self.tracking_number}.\n"
+            f"You can track your order here: https://www2.lso.com/access/package-tracking\n"
             f"Best,\n"
-            f"Chikfu Team"
+            f"The Chikfu Team"
         )
         with open("email_customer/email_template.html", "r") as file:
             html_message = file.read()
         template = Template(html_message)
-        self.html_message = template.substitute(tracking_number=self.tracking_number)
+        self.html_message = template.substitute(
+            tracking_number=self.tracking_number, customer_name=self.customer_name
+        )
 
     def send_mail(self):
         # initialize server

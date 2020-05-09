@@ -21,7 +21,7 @@ READY_TO_BUY = False
 SQUARESPACE = False
 
 
-def email_tracking_number(customer_email, tracking_code):
+def email_tracking_number(customer_email, tracking_code, customer_name):
     print(f"[+] Emailing {tracking_code} to {customer_email}")
     email = EmailCustomer(customer_email, tracking_code)
     email.send_mail()
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                 )
                 print(f"[+] Tracking code: {shipment.tracking_code}")
                 email_tracking_number(
-                    to_address_dict["customerEmail"], shipment.tracking_code
+                    toAddress.email, shipment.tracking_code, toAddress.name,
                 )
                 line.append(shipment.postage_label.label_url)
                 line.append(shipment.tracking_code)
