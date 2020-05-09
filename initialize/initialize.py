@@ -1,6 +1,6 @@
+import csv
 import json
 import math
-import csv
 import os
 
 
@@ -89,7 +89,7 @@ class Initialize:
                                 temp_dict["phone"] = phone
                                 temp_dict["parcel"] = parcel_dict
                                 self.to_address_list.append(temp_dict)
-                new_filename = "done-"+file_name
+                new_filename = "done-" + file_name
                 os.rename(os.path.join(directory, file_name), os.path.join(directory, new_filename))
 
     def initialize_to_address_squarespace(self):
