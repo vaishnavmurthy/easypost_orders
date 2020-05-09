@@ -14,7 +14,10 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: GitHub Action for pylint
-        uses: cclauss/GitHub-Action-for-pylint@0.7.0
-
-
+      - uses: actions/checkout@v1
+      - uses: ricardochaves/python-lint@v1.1.0
+        with:
+          extra-pycodestyle-options: "--ignore=E501,W503"
+          extra-flake8-options: "--ignore=E501,W503"
+          use-mypy: false
+          use-isort: false

@@ -1,20 +1,22 @@
-import smtplib, ssl
 import json
-from email.mime.text import MIMEText
+import smtplib
+import ssl
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from string import Template
 
 
 class EmailCustomer:
-
     def __init__(self, customer_email, tracking_number):
         self.tracking_number = tracking_number
         self.customer_email = customer_email
-        self.text_message = f"\nHello valued customer,\n" \
-                       f"Thank you for your Chikfu order! It will be shipped shortly.\n" \
-                       f"Your tracking number is {self.tracking_number}\n" \
-                       f"Best,\n" \
-                       f"Chikfu Team"
+        self.text_message = (
+            f"\nHello valued customer,\n"
+            f"Thank you for your Chikfu order! It will be shipped shortly.\n"
+            f"Your tracking number is {self.tracking_number}\n"
+            f"Best,\n"
+            f"Chikfu Team"
+        )
         with open("email_customer/email_template.html", "r") as file:
             html_message = file.read()
         template = Template(html_message)
@@ -23,7 +25,7 @@ class EmailCustomer:
     def send_mail(self):
         # initialize server
         context = ssl.create_default_context()
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context)
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context)
         with open("env_variables.json", "r") as file:
             env_variables = json.loads(file.read())
         # pulling username and password from config file
@@ -42,4 +44,3 @@ class EmailCustomer:
         message.attach(part2)
         # sending email
         server.sendmail(username, self.customer_email, message.as_string())
-
