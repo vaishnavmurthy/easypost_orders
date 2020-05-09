@@ -19,8 +19,3 @@ jobs:
           with:
             extra-pycodestyle-options: "--ignore=E501"
             extra-flake8-options: "--ignore=E501"
-
-
-
-
-
