@@ -19,4 +19,4 @@ jobs:
         with:
           extra-pycodestyle-options: "--ignore=E501,W503"
           extra-flake8-options: "--ignore=E501,W503"
-          extra-mypy-options: "ignore_missing_imports=True main.py email_customer/email_customer.py initialize/initialize.py"
+          use-mypy: false
