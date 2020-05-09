@@ -19,5 +19,4 @@ jobs:
         with:
           extra-pycodestyle-options: "--ignore=E501,W503"
           extra-flake8-options: "--ignore=E501,W503"
-          use-mypy: false
-          use-isort: false
+          extra-mypy-options: "ignore_missing_imports=True"
